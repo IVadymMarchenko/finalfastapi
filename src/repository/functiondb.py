@@ -2,34 +2,34 @@ import sys
 
 from sqlalchemy import select, cast, Date, or_, and_, extract
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.contacts.models import Contact
+from src.contacts.models import Contact, User
 from src.schemas.checkschemas import CreateContactSchema, CreateContact
 from datetime import datetime, timedelta
 from sqlalchemy import func
 
 
-async def get_contacts(limit: int, offset: int, db: AsyncSession):
-    smt = select(Contact).offset(offset).limit(limit)
+async def get_contacts(limit: int, offset: int, db: AsyncSession,user: User):
+    smt = select(Contact).filter_by(user=user).offset(offset).limit(limit)
     contacts = await db.execute(smt)
     return contacts.scalars().all()
 
 
-async def get_contact(contact_id: int, db: AsyncSession):
-    smt = select(Contact).filter_by(id=contact_id)
+async def get_contact(contact_id: int, db: AsyncSession,user: User):
+    smt = select(Contact).filter_by(id=contact_id,user=user)
     contact = await db.execute(smt)
     return contact.scalar_one_or_none()
 
 
-async def create_contact(body: CreateContactSchema, db: AsyncSession):
-    contact = Contact(**body.model_dump(exclude_unset=True))
+async def create_contact(body: CreateContactSchema, db: AsyncSession, user: User):
+    contact = Contact(**body.model_dump(exclude_unset=True),user=user)
     db.add(contact)
     await db.commit()
     await db.refresh(contact)
     return contact
 
 
-async def update_contact(contact_id: int, body: CreateContactSchema, db: AsyncSession):
-    smt = select(Contact).filter_by(id=contact_id)
+async def update_contact(contact_id: int, body: CreateContactSchema, db: AsyncSession,user: User):
+    smt = select(Contact).filter_by(id=contact_id,user=user)
     contacts = await db.execute(smt)
     contact = contacts.scalar_one_or_none()
     if contact:
@@ -81,13 +81,10 @@ async def upcoming_birthday(db: AsyncSession):
     return contacts.scalars().all()
 
 
-async def look_for_contact(db:AsyncSession,name_contact:str):
+async def look_for_contact(db: AsyncSession, name_contact: str):
     query = select(Contact).filter(or_(Contact.name == name_contact,
                                        Contact.surname == name_contact,
                                        Contact.email == name_contact))
     result = await db.execute(query)
     contact = result.scalar_one_or_none()
     return contact
-
-
-

@@ -3,8 +3,9 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.routes import myrouts
 from src.db.connectdb import get_db
-
+from src.routes import auth
 app=FastAPI()
+app.include_router(auth.routs)
 app.include_router(myrouts.routs)
 
 

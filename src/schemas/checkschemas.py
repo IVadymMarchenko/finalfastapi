@@ -3,6 +3,8 @@ from datetime import date
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy import Column, String, Integer, Date
 
+from src.schemas.user import UserResponse
+
 
 class CreateContactSchema(BaseModel):
     name: str = Field(max_length=30)
@@ -22,6 +24,7 @@ class CreateContact(BaseModel):
     email: str
     birthday: date
     information: str
+    user: UserResponse | None
 
     class Config:
         from_attributes = True
